@@ -25,6 +25,7 @@ requires:
   List::MoreUtils: 0
   MIME::Base64: 0
   Pod::Usage: 0
+  Term::ReadKey: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.01
+version: 0.02
