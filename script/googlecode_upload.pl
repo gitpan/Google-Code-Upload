@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 our $AUTHORITY = 'cpan:FAYLAND';
 
 use Getopt::Long;
@@ -24,37 +24,37 @@ GetOptions(
 );
 
 my $file = pop @ARGV;
-defined $file or pod2usage(1);
+unless ($file) { pod2usage(1); }
 -e $file or die "$file is not found\n";
 
 unless ( exists $params{n} ) {
-	print "Please enter your project name:";
+	print "Please enter your project name: ";
 	while ( $params{n} = ReadLine(0) ) {
 		chomp($params{n});
 		last if $params{n};
 	}
 }
 unless ( exists $params{u} ) {
-	print "Please enter your googlecode.com username:";
+	print "Please enter your googlecode.com username: ";
 	while ( $params{u} = ReadLine(0) ) {
 		chomp($params{u});
 		last if $params{u};
 	}
 }
-ReadMode('noecho');
 unless ( exists $params{p} ) {
+    ReadMode('noecho');
 	print "** Note that this is NOT your Gmail account password! **\n",
 		"It is the password you use to access Subversion repositories,\n",
 		"and can be found here: http://code.google.com/hosting/settings\n",
-		"your password:";
+		"your password: ";
 	while ( $params{p} = ReadLine(0) ) {
 		chomp($params{p});
 		last if $params{p};
 	}
+	ReadMode 'normal';
 }
-ReadMode 'normal';
 unless ( exists $params{s} ) {
-	print "Please enter your file summary:";
+	print "\nPlease enter your file summary: ";
 	while ( $params{s} = ReadLine(0) ) {
 		chomp($params{s});
 		last if $params{s};
@@ -62,8 +62,14 @@ unless ( exists $params{s} ) {
 }
 
 my @labels;
-if ( $params{l} ) {
+if ( exists $params{l} ) {
 	@labels = split(/\,\s*/, $params{l} );
+} else {
+    print "\nPlease enter your file labels (eg: 'Featured, Type-Source, OpSys-All'): ";
+	while ( my $labels = ReadLine(0) ) {
+		chomp($labels);
+		@labels = split(/\,\s*/, $labels);
+    }
 }
 
 my ( $status, $reason, $url ) = 
