@@ -1,52 +1,92 @@
-Google-Code-Upload
+NAME
+    Google::Code::Upload - upload files to a Google Code project
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+VERSION
+    version 0.006
 
-A README file is required for CPAN modules since CPAN extracts the README
-file from a module distribution so that people browsing the archive
-can use it to get an idea of the module's uses. It is usually a good idea
-to provide version information here so that people can decide whether
-fixes for the module are worth downloading.
+SYNOPSIS
+        use Google::Code::Upload;
+        my $gc = Google::Code::Upload->new(
+            project  => 'myproject',
+            username => 'mike',
+            password => 'abc123',
+        );
+        $gc->upload(
+            file        => 'README',
+            summary     => 'README for myproject',
+            labels      => ['Featured'],
+            description => 'Hello world',
+        );
 
+DESCRIPTION
+    It's an incomplete Perl port of
+    <https://support.googlecode.com/svn/trunk/scripts/googlecode_upload.py>
 
-INSTALLATION
+    Basically you need googlecode_upload script instead.
 
-To install this module, run the following commands:
+METHODS
+  new
+    Constructs a new "Google::Code::Upload" object. Takes the following
+    key-value pairs:
 
-	perl Makefile.PL
-	make
-	make test
-	make install
+    username
+    password (your Google Code password from
+    <https://code.google.com/hosting/settings>)
+    project
+    ua - something that works like a LWP::UserAgent (*optional*)
 
-SUPPORT AND DOCUMENTATION
+  upload
+    Upload the given file to Google Code. Requires the following key-value
+    pairs:
 
-After installing, you can find documentation for this module with the
-perldoc command.
+    file - the filename of the file to upload
+    summary - the one-line summary to give to the file (defaults to the
+    filename)
+    description - text describing the upload in more detail (for example,
+    the changelog entry for this release)
+    labels - an arrayref of labels like "Featured", "Type-Archive" or
+    "OpSys-All"
 
-    perldoc Google::Code::Upload
+    Returns the URL where the file can be downloaded if successful -
+    otherwise, dies with the HTTP status line.
 
-You can also look for information at:
+    You can also export the "upload" function, if you don't want to use OO
+    style. Instead of key-value pairs, specify the arguments in the
+    following order:
 
-    RT, CPAN's request tracker
-        http://rt.cpan.org/NoAuth/Bugs.html?Dist=Google-Code-Upload
+        use Google::Code::Upload qw(upload);
+        upload( $file, $project_name, $username, $password, $summary, $labels, $description );
 
-    AnnoCPAN, Annotated CPAN documentation
-        http://annocpan.org/dist/Google-Code-Upload
+EXPORTS
+    You may optionally export "upload" to use this module in a non-OO
+    manner.
 
-    CPAN Ratings
-        http://cpanratings.perl.org/d/Google-Code-Upload
+AVAILABILITY
+    The project homepage is
+    <http://search.cpan.org/dist/Google-Code-Upload/>.
 
-    Search CPAN
-        http://search.cpan.org/dist/Google-Code-Upload/
+    The latest version of this module is available from the Comprehensive
+    Perl Archive Network (CPAN). Visit <http://www.perl.com/CPAN/> to find a
+    CPAN site near you, or see
+    <https://metacpan.org/module/Google::Code::Upload/>.
 
+SOURCE
+    The development version is on github at
+    <http://github.com/fayland/google-code-upload> and may be cloned from
+    <git://github.com/fayland/google-code-upload.git>
 
-COPYRIGHT AND LICENCE
+BUGS AND LIMITATIONS
+    You can make new bug reports, and view existing ones, through the web
+    interface at <https://github.com/fayland/google-code-upload/issues>.
 
-Copyright (C) 2009 Fayland Lam
+AUTHORS
+    *   Fayland Lam <fayland@gmail.com>
 
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+    *   Mike Doherty <doherty@cpan.org>
+
+COPYRIGHT AND LICENSE
+    This software is copyright (c) 2012 by Fayland Lam <fayland@gmail.com>.
+
+    This is free software; you can redistribute it and/or modify it under
+    the same terms as the Perl 5 programming language system itself.
 

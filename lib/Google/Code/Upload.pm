@@ -1,132 +1,213 @@
 package Google::Code::Upload;
-
-use warnings;
 use strict;
-use File::Spec ();
-use File::Basename ();
-use List::MoreUtils qw/natatime/;
-use MIME::Base64;
+use warnings;
+# ABSTRACT: upload files to a Google Code project
+our $VERSION = '0.006'; # VERSION
+
+use File::Basename qw/basename/;
 use LWP::UserAgent;
-use HTTP::Headers;
-use HTTP::Request;
+use LWP::Protocol::https;
+use HTTP::Request::Common;
+use Scalar::Util qw/blessed/;
+use Carp;
 
-use base 'Exporter';
-use vars qw/@EXPORT_OK/;
-@EXPORT_OK = qw/ upload /;
 
-our $VERSION = '0.05';
-our $AUTHORITY = 'cpan:FAYLAND';
 
-sub upload {
-    my ( $file, $project_name, $username, $password, $summary, $labels ) = @_;
-    
-    $labels ||= [];
-    if ( $username =~ /^(.*?)\@gmail\.com$/ ) {
-        $username = $1;
+use Exporter qw(import);
+our @EXPORT_OK = qw/ upload /;
+
+
+sub new {
+    my $class = shift;
+    my %args  = @_;
+    $args{$_} || croak "You must provide $_" for qw(username password project);
+
+    if ( $args{username} =~ /^(.*?)\@gmail\.com$/ ) {
+        $args{username} = $1;
     }
+    my $agent_string = "$class/" . (defined $class->VERSION ? $class->VERSION : 'dev');
 
-    my @form_fields = (
-        summary => $summary,
-    );
-    push @form_fields, ( label => $_ ) foreach (@$labels);
-    
-    my ( $content_type, $body ) = encode_upload_request(\@form_fields, $file);
-    
-    my $upload_uri  = "https://$project_name.googlecode.com/files";
-    my $auth_token  = encode_base64("$username:$password", '');
-
-    my $header = HTTP::Headers->new;
-    $header->header('Authorization' => "Basic $auth_token");
-    $header->header('User-Agent' => 'Googlecode.com uploader v0.9.4');
-    $header->header('Content-Type' => $content_type);
-  
-    my $ua = LWP::UserAgent->new(
-        agent => 'Googlecode.com uploader v0.9.4',
-    );
-    my $request = HTTP::Request->new(POST =>$upload_uri, $header, $body);
-    my $response = $ua->request($request);
-
-    if ($response->code == 201) {
-        return ( $response->code, $response->status_line, $response->header('Location') );
-    } else {
-        return ( $response->code, $response->status_line, undef );
-    }
+    my $self  = {
+        ua          => $args{ua} || LWP::UserAgent->new( agent => $agent_string ),
+        upload_uri  => "https://$args{project}.googlecode.com/files",
+        password    => $args{password},
+        username    => $args{username},
+    };
+    return bless $self, $class;
 }
 
-sub encode_upload_request {
-    my ($form_fields, $file) = @_;
-    
-    my $BOUNDARY = '----------Googlecode_boundary_reindeer_flotilla';
-    my $CRLF = "\r\n";
 
-    my @body;
-    
-    my $it = natatime 2, @$form_fields;
-    while (my ( $key, $val ) = $it->()) {
-        push @body, (
-            "--$BOUNDARY",
-            qq~Content-Disposition: form-data; name="$key"~,
-            '',
-            $val
+sub upload {
+    my $self;
+    my $summary;
+    my $labels;
+    my $file;
+    my $description;
+
+    if (blessed $_[0]) {
+        $self = shift;
+        my %args = @_;
+        $file    = $args{file};
+        $summary = $args{summary} || basename($file);
+        $labels  = $args{labels} || [];
+        $description = $args{description};
+    }
+    else {
+        $file           = shift;
+        my $project     = shift;
+        my $username    = shift;
+        my $password    = shift;
+        $summary        = shift;
+        $labels         = shift || [];
+        $description    = shift;
+
+        $self = __PACKAGE__->new(
+            project     => $project,
+            username    => $username,
+            password    => $password,
         );
     }
-    
-    my $filename = File::Basename::basename($file);
-    open(my $fh, '<', $file) or die $!;
-    binmode($fh);
-    my $content = do {
-        local $/;
-        <$fh>;
-    };
-    close($fh);
-    
-    push @body, (
-        "--$BOUNDARY",
-        qq~Content-Disposition: form-data; name="filename"; filename="$filename"~,
-        # The upload server determines the mime-type, no need to set it.
-        'Content-Type: application/octet-stream',
-        '',
-        $content,
-    );
 
-    # Finalize the form body
-    push @body, ("--$BOUNDARY--", '');
+    my $request = POST $self->{upload_uri},
+        Content_Type => 'form-data',
+        Content      => [
+            summary  => $summary,
+            ( $description ? (description => $description) : ()),
+            ( map { (label => $_) } @$labels),
+            filename => [$file, basename($file), Content_Type => 'application/octet-stream'],
+        ];
+    $request->authorization_basic($self->{username}, $self->{password});
 
-    return ("multipart/form-data; boundary=$BOUNDARY", join( $CRLF, @body ) );
+    my $response = $self->{ua}->request($request);
+
+    return $response->header('Location')
+        if $response->code == 201;
+    croak $response->status_line;
 }
 
 1;
+
 __END__
+=pod
+
+=encoding utf-8
 
 =head1 NAME
 
-Google::Code::Upload - uploading files to a Google Code project.
+Google::Code::Upload - upload files to a Google Code project
+
+=head1 VERSION
+
+version 0.006
 
 =head1 SYNOPSIS
 
-    use Google::Code::Upload qw/upload/;
-
-    upload( $file, $project_name, $username, $password, $summary, $labels );
+    use Google::Code::Upload;
+    my $gc = Google::Code::Upload->new(
+        project  => 'myproject',
+        username => 'mike',
+        password => 'abc123',
+    );
+    $gc->upload(
+        file        => 'README',
+        summary     => 'README for myproject',
+        labels      => ['Featured'],
+        description => 'Hello world',
+    );
 
 =head1 DESCRIPTION
 
-It's an incomplete Perl port of L<http://support.googlecode.com/svn/trunk/scripts/googlecode_upload.py>
+It's an incomplete Perl port of L<https://support.googlecode.com/svn/trunk/scripts/googlecode_upload.py>
 
-basically you need L<googlecode_upload> script instead.
+Basically you need L<googlecode_upload> script instead.
 
 =head1 METHODS
 
+=head2 new
+
+Constructs a new C<Google::Code::Upload> object. Takes the following key-value
+pairs:
+
+=over 4
+
+=item username
+
+=item password (your Google Code password from L<https://code.google.com/hosting/settings>)
+
+=item project
+
+=item ua - something that works like a L<LWP::UserAgent> (I<optional>)
+
+=back
+
 =head2 upload
 
-    upload( $file, $project_name, $username, $password, $summary, $labels );
+Upload the given file to Google Code. Requires the following key-value pairs:
 
-=head1 AUTHOR
+=over 4
 
-Fayland Lam, C<< <fayland at gmail.com> >>
+=item file - the filename of the file to upload
 
-=head1 COPYRIGHT & LICENSE
+=item summary - the one-line summary to give to the file (defaults to the filename)
 
-Copyright 2009 Fayland Lam, all rights reserved.
+=item description - text describing the upload in more detail (for example, the
+changelog entry for this release)
 
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+=item labels - an arrayref of labels like C<Featured>, C<Type-Archive> or C<OpSys-All>
+
+=back
+
+Returns the URL where the file can be downloaded if successful - otherwise, dies
+with the HTTP status line.
+
+You can also export the C<upload> function, if you don't want to use OO style.
+Instead of key-value pairs, specify the arguments in the following order:
+
+    use Google::Code::Upload qw(upload);
+    upload( $file, $project_name, $username, $password, $summary, $labels, $description );
+
+=head1 EXPORTS
+
+You may optionally export C<upload> to use this module in a non-OO manner.
+
+=head1 AVAILABILITY
+
+The project homepage is L<http://search.cpan.org/dist/Google-Code-Upload/>.
+
+The latest version of this module is available from the Comprehensive Perl
+Archive Network (CPAN). Visit L<http://www.perl.com/CPAN/> to find a CPAN
+site near you, or see L<https://metacpan.org/module/Google::Code::Upload/>.
+
+=head1 SOURCE
+
+The development version is on github at L<http://github.com/fayland/google-code-upload>
+and may be cloned from L<git://github.com/fayland/google-code-upload.git>
+
+=head1 BUGS AND LIMITATIONS
+
+You can make new bug reports, and view existing ones, through the
+web interface at L<https://github.com/fayland/google-code-upload/issues>.
+
+=head1 AUTHORS
+
+=over 4
+
+=item *
+
+Fayland Lam <fayland@gmail.com>
+
+=item *
+
+Mike Doherty <doherty@cpan.org>
+
+=back
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2012 by Fayland Lam <fayland@gmail.com>.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+
