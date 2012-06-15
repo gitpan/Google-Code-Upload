@@ -36,4 +36,4 @@ resources:
   bugtracker: https://github.com/fayland/google-code-upload/issues
   homepage: http://search.cpan.org/dist/Google-Code-Upload/
   repository: git://github.com/fayland/google-code-upload.git
-version: 0.006
+version: 0.06

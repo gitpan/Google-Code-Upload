@@ -2,7 +2,7 @@ package Google::Code::Upload;
 use strict;
 use warnings;
 # ABSTRACT: upload files to a Google Code project
-our $VERSION = '0.006'; # VERSION
+our $VERSION = '0.06'; # VERSION
 
 use File::Basename qw/basename/;
 use LWP::UserAgent;
@@ -98,7 +98,7 @@ Google::Code::Upload - upload files to a Google Code project
 
 =head1 VERSION
 
-version 0.006
+version 0.06
 
 =head1 SYNOPSIS
 
