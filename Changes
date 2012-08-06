@@ -1,5 +1,9 @@
 Revision history for Google-Code-Upload
 
+0.07      2012-08-06
+  - POD update
+  - Include Term::ReadKey as a dependency
+
 0.06      2012-06-14
   - Re-released with the right version number
 

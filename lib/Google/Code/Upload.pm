@@ -2,7 +2,7 @@ package Google::Code::Upload;
 use strict;
 use warnings;
 # ABSTRACT: upload files to a Google Code project
-our $VERSION = '0.06'; # VERSION
+our $VERSION = '0.07'; # VERSION
 
 use File::Basename qw/basename/;
 use LWP::UserAgent;
@@ -98,7 +98,7 @@ Google::Code::Upload - upload files to a Google Code project
 
 =head1 VERSION
 
-version 0.06
+version 0.07
 
 =head1 SYNOPSIS
 
@@ -117,9 +117,9 @@ version 0.06
 
 =head1 DESCRIPTION
 
-It's an incomplete Perl port of L<https://support.googlecode.com/svn/trunk/scripts/googlecode_upload.py>
+This module allows you to programmatically upload files to L<Google Code|https://googlecode.com>.
 
-Basically you need L<googlecode_upload> script instead.
+It ships with an executable script for use on the command line: L<googlecode_upload.pl>.
 
 =head1 METHODS
 

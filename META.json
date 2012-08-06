@@ -5,7 +5,7 @@
       "Mike Doherty <doherty@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.300018, CPAN::Meta::Converter version 2.120630",
+   "generated_by" : "Dist::Zilla version 4.300014, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "perl_5"
    ],
@@ -16,7 +16,9 @@
    "name" : "Google-Code-Upload",
    "no_index" : {
       "directory" : [
-         "corpus"
+         "corpus",
+         "inc",
+         "examples"
       ]
    },
    "prereqs" : {
@@ -27,7 +29,6 @@
       },
       "configure" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : "6.30",
             "Module::Build" : "0.3601"
          }
       },
@@ -36,10 +37,13 @@
             "Carp" : "0",
             "Exporter" : "0",
             "File::Basename" : "0",
+            "Getopt::Long" : "0",
             "HTTP::Request::Common" : "0",
             "LWP::Protocol::https" : "0",
             "LWP::UserAgent" : "0",
+            "Pod::Usage" : "0",
             "Scalar::Util" : "0",
+            "Term::ReadKey" : "0",
             "perl" : "5.006",
             "strict" : "0",
             "warnings" : "0"
@@ -65,6 +69,6 @@
          "web" : "https://github.com/fayland/google-code-upload"
       }
    },
-   "version" : "0.06"
+   "version" : "0.07"
 }
 

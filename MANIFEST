@@ -8,9 +8,9 @@ META.yml
 Makefile.PL
 README
 README.mkdn
+bin/googlecode_upload.pl
 dist.ini
 lib/Google/Code/Upload.pm
-script/googlecode_upload.pl
 t/00-compile.t
 t/load.t
 t/testfile.1
